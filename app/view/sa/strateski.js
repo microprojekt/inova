@@ -54,9 +54,26 @@ Ext.define('inova.view.sa.strateski', {
             console.log("Delete");
             var grid = this.up().up().down('.grid');
             store = grid.store;
-            store.remove(store.first());
-            
+            var selection = grid.getView().getSelectionModel().getSelection()[0];
+
+            if (selection) {
+                Ext.Msg.show({
+                    title: 'Brisanje?',
+                    message: 'Jeste li sigurni',
+                    buttons: Ext.Msg.YESNO,
+                    icon: Ext.Msg.WARNING,
+                    fn: function(btn) {
+                        if (btn === 'yes') {                            
+                            store.remove(selection);
+                        }
+                    }
+                });
+
+            } else {
+                Ext.Msg.alert('Greška', 'Izabeti redak koji treba izbrisati jebem te glupa .');
+            }
         }
+
     }],
 
     items: [{

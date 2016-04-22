@@ -225,13 +225,12 @@ function delDoc(req,res){
                     return console.error('error running query', err);
                 } else {
                     //console.log(result.rows);
-                    res.json("Izbrisano");
+                    res.json("Deleted");
                 }
             })
         }
     })
-    client.end();
 }
-
+//var query=`Update sadrzaj set active = 0 where id =`+id+` `;
     
 
