@@ -16,13 +16,14 @@ module.exports = {
     downloadDoc: downloadDoc,
     upload: upload,
     postDoc: postDoc,
-    delDoc: delDoc
+    delDoc: delDoc,
+    changeDoc: changeDoc
 };
 
 function postDoc(req, res) {
     var userId = req.decoded.user_id;
     var clientId = req.decoded.client_id;
-    
+
     //res.json({ 'id': id, 'docname': 'documentIme' });
     var client = new pg.Client(conString);
     client.connect(function(err) {
@@ -90,9 +91,10 @@ function getDoc(req, res) {
 }
 
 function downloadDoc(req, res, next) {
-    //console.log(req.swagger.params.file.value);   
-    var filename = "neke-sise.pdf"
-    var img = fs.readFileSync('/var/www/testapp/api/hello-world/documents/' + filename + '');
+    //console.log(req.swagger.params.file.value); 
+
+    var filename = req.swagger.params.file.value;
+    var img = fs.readFileSync('/var/www/inova/hello-world/documents/' + filename + '');
 
     var file_extension = path.extname(filename).substring(1);
     console.log(file_extension);
@@ -150,14 +152,14 @@ function upload(req, res) {
 
         } else {
             console.log(filename22);
-            res.json('aa');
+            res.json(filename22);
         }
 
     })
 }
 
 function fileUpload(name, file, cb) {
-    var path = '/var/www/testapp/api/hello-world/documents/' + name + '';
+    var path = '/var/www/inova/hello-world/documents/' + name + '';
     var buffer = new Buffer(file.buffer);
     var random = new Date().getTime();
     fs.readFile(path, function(err, data) {
@@ -167,7 +169,7 @@ function fileUpload(name, file, cb) {
         } else if (data) {
             var changeName = name.split('.');
             var newName = changeName[0] + random + '.' + changeName[1];
-            path = '/var/www/testapp/api/hello-world/documents/' + newName + '';
+            path = '/var/www/inova/hello-world/documents/' + newName + '';
             name = newName
                 //fileUpload(name, file, cb)
         }
@@ -212,14 +214,20 @@ function getDateTime() {
     return year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec;
 
 }
-function delDoc(req,res){
-    var id = req.swagger.params.id.value;    
+
+function delDoc(req, res) {
+    var id = req.swagger.params.id.value;
     var client = new pg.Client(conString);
+    var userId = req.decoded.user_id;
     client.connect(function(err) {
         if (err) {
             return console.error('could not connect to postgres', err);
         } else {
-            var query=`Update sadrzaj set active = 0 where id =`+id+` `;
+            var query = `Update sadrzaj set
+             active = 0,
+             modified_by = ` + userId + `,
+             modified_ts =  NOW()
+              where id =` + id + ` `;
             client.query(query, function(err, result) {
                 if (err) {
                     return console.error('error running query', err);
@@ -232,5 +240,52 @@ function delDoc(req,res){
     })
 }
 //var query=`Update sadrzaj set active = 0 where id =`+id+` `;
-    
+function changeDoc(req, res) {
+    var id = req.swagger.params.id.value;
+    var data = JSON.parse(req.swagger.params.docname.value);
+    var userId = req.decoded.user_id;
+    var clientId = req.decoded.client_id;
+    var name = data.docname;
+    var autor = data.autor;
+    var filename = data.filename
+    var query = '';
+        //console.log(name); 
+    if (data.docname) {
+        query = `Update sadrzaj set 
+                name = '` + name + `',                
+                modified_by = ` + userId + `,
+                modified_ts =  NOW()
 
+            where id =` + id + ` `;
+    }
+    if (data.autor) {
+        query = `Update ri.dokumentacija set 
+                autor = '` + autor + `'
+            where id =` + id + ` `;
+    }
+    if(data.filename)
+    {
+        query = `Update ri.dokumentacija set 
+                link = '` + filename + `' 
+            where id =` + id + ` `;
+    }
+    console.log(query);
+    
+    var client = new pg.Client(conString);
+    client.connect(function(err) {
+        if (err) {
+            return console.error('could not connect to postgres', err);
+        } else { 
+            client.query(query, function(err, result) {
+                if (err) {
+                    return console.error('error running query', err);
+                } else {
+
+                    res.json("Changed");
+                }
+            })
+        }
+    })
+
+    
+}

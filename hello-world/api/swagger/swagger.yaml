@@ -164,6 +164,28 @@ paths:
           description: Error
           schema:
             $ref: "#/definitions/ErrorResponse"
+    put:
+      operationId: changeDoc
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: docname
+          in: body
+          schema: 
+            type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/HelloWorldResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
   /osnovni_podaci:
     x-swagger-router-controller: osnovniPodaci
     post:
